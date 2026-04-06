@@ -69,7 +69,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ env.OPENWRT_DL_DIR }}
-          key: ${{ runner.os }}-openwrt-dl-${{ env.OPENWRT_BRANCH }}-${{ hashFiles('openwrt/package/lang/node24/Makefile', 'openwrt/package/lang/node24/patches/**', 'openwrt/configs/rockchip-armv8-node24.config', 'scripts/prepare_openwrt.sh', 'scripts/build_node24.sh') }}
+          key: ${{ runner.os }}-openwrt-dl-${{ env.OPENWRT_BRANCH }}-${{ hashFiles('openwrt/package/lang/node24/Makefile', 'openwrt/package/lang/node24/patches/**', 'openwrt/configs/rockchip-armv8-node24.config', 'scripts/prepare_openwrt.sh') }}
           restore-keys: |
             ${{ runner.os }}-openwrt-dl-${{ env.OPENWRT_BRANCH }}-
 
@@ -77,7 +77,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ${{ runner.os }}-openwrt-ccache-${{ env.OPENWRT_BRANCH }}-${{ hashFiles('openwrt/package/lang/node24/Makefile', 'openwrt/package/lang/node24/patches/**', 'openwrt/configs/rockchip-armv8-node24.config', 'scripts/prepare_openwrt.sh', 'scripts/build_node24.sh') }}
+          key: ${{ runner.os }}-openwrt-ccache-${{ env.OPENWRT_BRANCH }}-${{ hashFiles('openwrt/package/lang/node24/Makefile', 'openwrt/package/lang/node24/patches/**', 'openwrt/configs/rockchip-armv8-node24.config') }}
           restore-keys: |
             ${{ runner.os }}-openwrt-ccache-${{ env.OPENWRT_BRANCH }}-
 
@@ -101,8 +101,37 @@ jobs:
       - name: Prepare OpenWrt source tree
         run: ./scripts/prepare_openwrt.sh
 
-      - name: Build node24 package
-        run: ./scripts/build_node24.sh
+      - name: Show OpenWrt config summary
+        run: |
+          set -euo pipefail
+          grep -E '^(CONFIG_TARGET_|CONFIG_PACKAGE_node24|CONFIG_NODEJS_ICU_)' "${OPENWRT_SRC_DIR}/.config" | sort
+
+      - name: Download OpenWrt sources
+        working-directory: ${{ env.OPENWRT_SRC_DIR }}
+        run: make -j1 download V=s
+
+      - name: Build OpenWrt tools
+        working-directory: ${{ env.OPENWRT_SRC_DIR }}
+        run: FORCE_UNSAFE_CONFIGURE=1 make -j"${BUILD_JOBS}" tools/install V=s
+
+      - name: Build OpenWrt toolchain
+        working-directory: ${{ env.OPENWRT_SRC_DIR }}
+        run: FORCE_UNSAFE_CONFIGURE=1 make -j"${BUILD_JOBS}" toolchain/install V=s
+
+      - name: Prepare node24
+        working-directory: ${{ env.OPENWRT_SRC_DIR }}
+        run: make -j"${BUILD_JOBS}" package/lang/node24/prepare V=s
+
+      - name: Compile node24
+        working-directory: ${{ env.OPENWRT_SRC_DIR }}
+        run: make -j"${BUILD_JOBS}" package/lang/node24/compile V=s
+
+      - name: Show built package sizes
+        run: |
+          set -euo pipefail
+          ls -lh \
+            "${OPENWRT_SRC_DIR}/bin/packages/aarch64_generic/base/node24_"*.ipk \
+            "${OPENWRT_SRC_DIR}/bin/packages/aarch64_generic/base/node24-npm_"*.ipk
 
       - name: Upload ipk artifacts
         uses: actions/upload-artifact@v6
