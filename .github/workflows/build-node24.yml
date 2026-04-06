@@ -21,11 +21,49 @@ jobs:
       OPENWRT_SRC_DIR: ${{ github.workspace }}/work/openwrt-src
       OPENWRT_DL_DIR: ${{ github.workspace }}/work/dl
       CCACHE_DIR: ${{ github.workspace }}/work/.ccache
-      BUILD_JOBS: 12
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
+      - name: Detect runner resources
+        run: |
+          set -euo pipefail
+          cpu_jobs="$(nproc)"
+          mem_gib="$(awk '/MemTotal/ {print int($2/1024/1024)}' /proc/meminfo)"
+          build_jobs="$mem_gib"
+          max_jobs="$(( cpu_jobs * 3 / 2 ))"
+
+          if [ "$build_jobs" -gt "$max_jobs" ]; then
+            build_jobs="$max_jobs"
+          fi
+          if [ "$build_jobs" -lt 4 ]; then
+            build_jobs=4
+          fi
+
+          echo "BUILD_JOBS=$build_jobs" >> "$GITHUB_ENV"
+
+          echo "Runner CPU cores: $cpu_jobs"
+          echo "Runner memory: ${mem_gib} GiB"
+          echo "Computed BUILD_JOBS: $build_jobs"
+          echo
+          echo "== uname =="
+          uname -a
+          echo
+          echo "== CPU =="
+          nproc
+          echo
+          echo "== memory =="
+          free -h
+          echo
+          echo "== meminfo =="
+          grep -E 'MemTotal|MemAvailable|SwapTotal|SwapFree' /proc/meminfo
+          echo
+          echo "== disk =="
+          df -h
+          echo
+          echo "== loadavg =="
+          cat /proc/loadavg
 
       - name: Restore download cache
         uses: actions/cache@v5
