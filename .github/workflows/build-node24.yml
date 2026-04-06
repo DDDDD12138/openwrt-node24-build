@@ -1,0 +1,75 @@
+name: build-node24
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/build-node24.yml"
+      - "openwrt/**"
+      - "scripts/**"
+      - "README.md"
+      - ".gitignore"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      OPENWRT_BRANCH: openwrt-24.10
+      OPENWRT_SRC_DIR: ${{ github.workspace }}/work/openwrt-src
+      OPENWRT_DL_DIR: ${{ github.workspace }}/work/dl
+      CCACHE_DIR: ${{ github.workspace }}/work/.ccache
+      BUILD_JOBS: 12
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Restore download cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.OPENWRT_DL_DIR }}
+          key: ${{ runner.os }}-openwrt-dl-${{ env.OPENWRT_BRANCH }}-${{ hashFiles('openwrt/package/lang/node24/Makefile', 'openwrt/package/lang/node24/patches/**', 'openwrt/configs/rockchip-armv8-node24.config', 'scripts/prepare_openwrt.sh', 'scripts/build_node24.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-openwrt-dl-${{ env.OPENWRT_BRANCH }}-
+
+      - name: Restore ccache
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-openwrt-ccache-${{ env.OPENWRT_BRANCH }}-${{ hashFiles('openwrt/package/lang/node24/Makefile', 'openwrt/package/lang/node24/patches/**', 'openwrt/configs/rockchip-armv8-node24.config', 'scripts/prepare_openwrt.sh', 'scripts/build_node24.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-openwrt-ccache-${{ env.OPENWRT_BRANCH }}-
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ack antlr3 asciidoc autoconf automake autopoint binutils bison \
+            build-essential ccache cmake cpio curl device-tree-compiler flex \
+            gawk gcc-multilib g++-multilib gettext genisoimage git gperf \
+            haveged help2man intltool libelf-dev libfuse-dev libglib2.0-dev \
+            libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses-dev \
+            libpython3-dev libreadline-dev libssl-dev libtool lld msmtp \
+            ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip \
+            python3-ply python3-docutils python3-pyelftools python3-setuptools \
+            qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs \
+            upx-ucl unzip vim wget xmlto xxd zlib1g-dev zstd
+          mkdir -p "${OPENWRT_DL_DIR}" "${CCACHE_DIR}"
+          ccache --max-size 2G
+
+      - name: Prepare OpenWrt source tree
+        run: ./scripts/prepare_openwrt.sh
+
+      - name: Build node24 package
+        run: ./scripts/build_node24.sh
+
+      - name: Upload ipk artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: node24-ipk-aarch64_generic
+          path: |
+            ${{ env.OPENWRT_SRC_DIR }}/bin/packages/aarch64_generic/base/node24_*.ipk
+            ${{ env.OPENWRT_SRC_DIR }}/bin/packages/aarch64_generic/base/node24-npm_*.ipk

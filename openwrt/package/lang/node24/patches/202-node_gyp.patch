@@ -1,0 +1,8 @@
+--- a/node.gyp
++++ b/node.gyp
+@@ -1438,6 +1438,7 @@
+       'toolsets': ['host'],
++      'libraries!':[ '-licui18n', '-licuuc', '-licudata', '-lcrypto', '-lssl', '-lz', '-lhttp_parser', '-luv', '-lnghttp2', '-lcares' ],
+       'include_dirs': [
+         'tools',
+         'src',
