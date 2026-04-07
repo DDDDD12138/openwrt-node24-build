@@ -10,6 +10,7 @@ It does not commit the full OpenWrt source tree. A fresh OpenWrt checkout is cre
 
 ## Current target
 
+- OpenWrt series: `24.10`
 - OpenWrt branch: `openwrt-24.10`
 - Package version: `node24 24.14.1`
 - Target packages arch: `aarch64_generic`
@@ -19,11 +20,11 @@ It does not commit the full OpenWrt source tree. A fresh OpenWrt checkout is cre
 
 - `openwrt/package/lang/node24/`
   Private Node 24 package overlay.
-- `openwrt/configs/rockchip-armv8-node24.config`
-  Minimal OpenWrt config used by CI.
+- `openwrt/configs/24.10/aarch64_generic.config`
+  Minimal OpenWrt config for the only supported target line.
 - `scripts/prepare_openwrt.sh`
   Clones OpenWrt, updates feeds, applies local overlay, and writes config.
-- `scripts/build_node24.sh`
+- `scripts/build_openwrt_node24.sh`
   Builds tools, toolchain, and the `node24` package.
 - `.github/workflows/build-node24.yml`
   GitHub Actions workflow.
@@ -31,9 +32,11 @@ It does not commit the full OpenWrt source tree. A fresh OpenWrt checkout is cre
 ## Local build
 
 ```bash
+export OPENWRT_SERIES=24.10
+export OPENWRT_PKG_ARCH=aarch64_generic
 export OPENWRT_SRC_DIR="$PWD/work/openwrt-src"
 ./scripts/prepare_openwrt.sh
-./scripts/build_node24.sh
+./scripts/build_openwrt_node24.sh
 ```
 
 Artifacts are produced under:
