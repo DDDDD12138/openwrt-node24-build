@@ -41,7 +41,7 @@ define Package/node24
   URL:=https://nodejs.org/
   DEPENDS:=@HAS_FPU @(i386||x86_64||arm||aarch64) \
 	   +libstdcpp +libopenssl +zlib +libnghttp2 \
-	   +libcares +libatomic +NODEJS_ICU_SYSTEM:icu +NODEJS_ICU_SYSTEM:icu-full-data
+	   +libcares +libatomic +NODE24_ICU_SYSTEM:icu +NODE24_ICU_SYSTEM:icu-full-data
 endef
 
 define Package/node24/description
@@ -73,17 +73,17 @@ define Package/node24/config
 	if PACKAGE_node24
 	choice
 		prompt "i18n features"
-		default NODEJS_ICU_SMALL
+		default NODE24_ICU_SMALL
 		help
 		 Select i18n features
 
-		config NODEJS_ICU_NONE
+		config NODE24_ICU_NONE
 			bool "Disable"
 
-		config NODEJS_ICU_SMALL
+		config NODE24_ICU_SMALL
 			bool "small-icu"
 
-		config NODEJS_ICU_SYSTEM
+		config NODE24_ICU_SYSTEM
 			depends on ARCH_64BIT
 			bool "system-icu"
 	endchoice
@@ -118,7 +118,7 @@ CONFIGURE_ARGS:= \
 	--shared-openssl \
 	--shared-nghttp2 \
 	--shared-cares \
-	--with-intl=$(if $(CONFIG_NODEJS_ICU_SMALL),small-icu,$(if $(CONFIG_NODEJS_ICU_SYSTEM),system-icu,none)) \
+	--with-intl=$(if $(CONFIG_NODE24_ICU_SMALL),small-icu,$(if $(CONFIG_NODE24_ICU_SYSTEM),system-icu,none)) \
 	$(if $(findstring +neon",$(CONFIG_CPU_TYPE)),--with-arm-fpu=neon) \
 	$(if $(findstring +neon-vfpv4",$(CONFIG_CPU_TYPE)),--with-arm-fpu=neon) \
 	$(if $(findstring +vfpv4",$(CONFIG_CPU_TYPE)),--with-arm-fpu=vfpv3) \

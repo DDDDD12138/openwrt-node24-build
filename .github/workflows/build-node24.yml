@@ -104,7 +104,7 @@ jobs:
       - name: Show OpenWrt config summary
         run: |
           set -euo pipefail
-          grep -E '^(CONFIG_TARGET_|CONFIG_PACKAGE_node24|CONFIG_NODEJS_ICU_)' "${OPENWRT_SRC_DIR}/.config" | sort
+          grep -E '^(CONFIG_TARGET_|CONFIG_PACKAGE_node24|CONFIG_NODE24_ICU_)' "${OPENWRT_SRC_DIR}/.config" | sort
 
       - name: Download OpenWrt sources
         working-directory: ${{ env.OPENWRT_SRC_DIR }}
