@@ -7,9 +7,14 @@ OPENWRT_BRANCH="${OPENWRT_BRANCH:-openwrt-24.10}"
 OPENWRT_REPO="${OPENWRT_REPO:-https://github.com/openwrt/openwrt.git}"
 OPENWRT_SRC_DIR="${OPENWRT_SRC_DIR:-$ROOT_DIR/work/openwrt-src}"
 OPENWRT_DL_DIR="${OPENWRT_DL_DIR:-$ROOT_DIR/work/dl}"
-OPENWRT_PKG_ARCH="${OPENWRT_PKG_ARCH:-aarch64_generic}"
+OPENWRT_TARGET_ID="${OPENWRT_TARGET_ID:-rockchip-armv8}"
 PACKAGES_FEED_REPO="${PACKAGES_FEED_REPO:-https://github.com/openwrt/packages.git}"
-CONFIG_FILE="${CONFIG_FILE:-$ROOT_DIR/openwrt/configs/$OPENWRT_SERIES/$OPENWRT_PKG_ARCH.config}"
+CONFIG_FILE="${CONFIG_FILE:-$ROOT_DIR/openwrt/configs/$OPENWRT_SERIES/$OPENWRT_TARGET_ID.config}"
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "OpenWrt config file not found: $CONFIG_FILE" >&2
+  exit 1
+fi
 
 rm -rf "$OPENWRT_SRC_DIR"
 mkdir -p "$OPENWRT_DL_DIR"

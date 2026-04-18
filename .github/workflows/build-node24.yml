@@ -14,21 +14,57 @@ on:
 
 jobs:
   build:
+    name: ${{ matrix.target.id }}
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - id: rockchip-armv8
+            openwrt_target: rockchip
+            openwrt_subtarget: armv8
+            pkg_arch: aarch64_generic
+            config_file: openwrt/configs/24.10/rockchip-armv8.config
+          - id: x86-64
+            openwrt_target: x86
+            openwrt_subtarget: "64"
+            pkg_arch: x86_64
+            config_file: openwrt/configs/24.10/x86-64.config
+          - id: x86-generic
+            openwrt_target: x86
+            openwrt_subtarget: generic
+            pkg_arch: i386_pentium4
+            config_file: openwrt/configs/24.10/x86-generic.config
+          - id: bcm27xx-bcm2709
+            openwrt_target: bcm27xx
+            openwrt_subtarget: bcm2709
+            pkg_arch: arm_cortex-a7_neon-vfpv4
+            config_file: openwrt/configs/24.10/bcm27xx-bcm2709.config
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
       OPENWRT_SERIES: "24.10"
       OPENWRT_BRANCH: openwrt-24.10
-      OPENWRT_PKG_ARCH: aarch64_generic
+      OPENWRT_TARGET_ID: ${{ matrix.target.id }}
+      OPENWRT_TARGET: ${{ matrix.target.openwrt_target }}
+      OPENWRT_SUBTARGET: ${{ matrix.target.openwrt_subtarget }}
+      OPENWRT_PKG_ARCH: ${{ matrix.target.pkg_arch }}
       PACKAGE_NAME: node24
       OPENWRT_SRC_DIR: ${{ github.workspace }}/work/openwrt-src
       OPENWRT_DL_DIR: ${{ github.workspace }}/work/dl
       CCACHE_DIR: ${{ github.workspace }}/work/.ccache
-      CONFIG_FILE: ${{ github.workspace }}/openwrt/configs/24.10/aarch64_generic.config
+      CONFIG_FILE: ${{ github.workspace }}/${{ matrix.target.config_file }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
+      - name: Show build target
+        run: |
+          set -euo pipefail
+          echo "Target ID: ${OPENWRT_TARGET_ID}"
+          echo "OpenWrt target: ${OPENWRT_TARGET}/${OPENWRT_SUBTARGET}"
+          echo "Package arch: ${OPENWRT_PKG_ARCH}"
+          echo "Config file: ${CONFIG_FILE}"
 
       - name: Detect runner resources
         run: |
@@ -73,16 +109,18 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ env.OPENWRT_DL_DIR }}
-          key: ${{ runner.os }}-openwrt-dl-${{ env.OPENWRT_BRANCH }}-${{ hashFiles('openwrt/package/lang/node24/Makefile', 'openwrt/package/lang/node24/patches/**', 'openwrt/configs/24.10/aarch64_generic.config', 'scripts/prepare_openwrt.sh') }}
+          key: ${{ runner.os }}-openwrt-dl-${{ env.OPENWRT_BRANCH }}-${{ matrix.target.id }}-${{ hashFiles('openwrt/package/lang/node24/Makefile', 'openwrt/package/lang/node24/patches/**', 'openwrt/configs/24.10/**', 'scripts/prepare_openwrt.sh') }}
           restore-keys: |
+            ${{ runner.os }}-openwrt-dl-${{ env.OPENWRT_BRANCH }}-${{ matrix.target.id }}-
             ${{ runner.os }}-openwrt-dl-${{ env.OPENWRT_BRANCH }}-
 
       - name: Restore ccache
         uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ${{ runner.os }}-openwrt-ccache-${{ env.OPENWRT_BRANCH }}-${{ hashFiles('openwrt/package/lang/node24/Makefile', 'openwrt/package/lang/node24/patches/**', 'openwrt/configs/24.10/aarch64_generic.config') }}
+          key: ${{ runner.os }}-openwrt-ccache-${{ env.OPENWRT_BRANCH }}-${{ matrix.target.id }}-${{ hashFiles('openwrt/package/lang/node24/Makefile', 'openwrt/package/lang/node24/patches/**', 'openwrt/configs/24.10/**') }}
           restore-keys: |
+            ${{ runner.os }}-openwrt-ccache-${{ env.OPENWRT_BRANCH }}-${{ matrix.target.id }}-
             ${{ runner.os }}-openwrt-ccache-${{ env.OPENWRT_BRANCH }}-
 
       - name: Install build dependencies
@@ -140,7 +178,7 @@ jobs:
       - name: Upload ipk artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ env.PACKAGE_NAME }}-ipk-${{ env.OPENWRT_PKG_ARCH }}
+          name: ${{ env.PACKAGE_NAME }}-ipk-${{ env.OPENWRT_TARGET_ID }}-${{ env.OPENWRT_PKG_ARCH }}
           path: |
             ${{ env.OPENWRT_SRC_DIR }}/bin/packages/${{ env.OPENWRT_PKG_ARCH }}/base/${{ env.PACKAGE_NAME }}_*.ipk
             ${{ env.OPENWRT_SRC_DIR }}/bin/packages/${{ env.OPENWRT_PKG_ARCH }}/base/${{ env.PACKAGE_NAME }}-npm_*.ipk
