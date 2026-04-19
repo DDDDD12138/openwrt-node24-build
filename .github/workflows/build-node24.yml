@@ -30,16 +30,6 @@ jobs:
             openwrt_subtarget: "64"
             pkg_arch: x86_64
             config_file: openwrt/configs/24.10/x86-64.config
-          - id: x86-generic
-            openwrt_target: x86
-            openwrt_subtarget: generic
-            pkg_arch: i386_pentium4
-            config_file: openwrt/configs/24.10/x86-generic.config
-          - id: bcm27xx-bcm2709
-            openwrt_target: bcm27xx
-            openwrt_subtarget: bcm2709
-            pkg_arch: arm_cortex-a7_neon-vfpv4
-            config_file: openwrt/configs/24.10/bcm27xx-bcm2709.config
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
       OPENWRT_SERIES: "24.10"
@@ -129,7 +119,7 @@ jobs:
           sudo apt-get install -y \
             ack antlr3 asciidoc autoconf automake autopoint binutils bison \
             build-essential ccache cmake cpio curl device-tree-compiler flex \
-            gawk gcc-multilib g++-multilib gettext genisoimage git gperf \
+            gawk gettext genisoimage git gperf \
             haveged help2man intltool libelf-dev libfuse-dev libglib2.0-dev \
             libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses-dev \
             libpython3-dev libreadline-dev libssl-dev libtool lld msmtp \

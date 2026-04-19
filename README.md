@@ -18,8 +18,6 @@ It does not commit the full OpenWrt source tree. A fresh OpenWrt checkout is cre
 | --- | --- | --- | --- |
 | `rockchip-armv8` | `rockchip/armv8` | `aarch64_generic` | `aarch64` |
 | `x86-64` | `x86/64` | `x86_64` | `x86_64` |
-| `x86-generic` | `x86/generic` | `i386_pentium4` | `i386` |
-| `bcm27xx-bcm2709` | `bcm27xx/bcm2709` | `arm_cortex-a7_neon-vfpv4` | `arm` |
 
 ## Repository layout
 
@@ -47,7 +45,7 @@ export OPENWRT_SRC_DIR="$PWD/work/openwrt-src"
 To pick a different target explicitly:
 
 ```bash
-export CONFIG_FILE="$PWD/openwrt/configs/24.10/bcm27xx-bcm2709.config"
+export CONFIG_FILE="$PWD/openwrt/configs/24.10/rockchip-armv8.config"
 ```
 
 Artifacts are produced under:
@@ -60,4 +58,5 @@ $OPENWRT_SRC_DIR/bin/packages/<target-packages-arch>/base/
 
 - The build removes the obsolete OpenWrt `tools/gnulib/patches/000-bootstrap.patch` after checkout because it no longer applies cleanly in the tested environment.
 - The package overlay already includes the Node 24 patch adjustments needed for this build.
+- Node.js 24 treats 32-bit Linux targets as experimental upstream and does not ship official 32-bit release binaries, so this repository only supports 64-bit OpenWrt targets.
 - `OPENWRT_TARGET_ID` defaults to `rockchip-armv8`, which keeps the previous single-target behavior for local builds.
